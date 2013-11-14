@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait 
+from selenium.webdriver.support.ui import WebDriverWait
 import unittest, time, re
 
 class GetBaseTask(unittest.TestCase):
     
     def setUp(self):
+        self.username = "donatelo@interia.pl" # TODO: give username and password as parameters
+        self.password = "donatelo1"
         self.driver = webdriver.Firefox()
         self.driver.implicitly_wait(30)
         self.wait = WebDriverWait(self.driver, 10) # TODO: remove time.sleep(2)
@@ -16,9 +18,9 @@ class GetBaseTask(unittest.TestCase):
         driver = self.driver
         driver.get(self.base_url + "/users/login")
         driver.find_element_by_id("user_email").clear()
-        driver.find_element_by_id("user_email").send_keys("donatelo@interia.pl")
+        driver.find_element_by_id("user_email").send_keys(str(self.username))
         driver.find_element_by_id("user_password").clear()
-        driver.find_element_by_id("user_password").send_keys("donatelo1")
+        driver.find_element_by_id("user_password").send_keys(str(self.password))
         driver.find_element_by_xpath("//form[@id='user_new']/fieldset/div[3]/div/button").click()
         for i in range(60):
             try:
@@ -27,7 +29,7 @@ class GetBaseTask(unittest.TestCase):
             time.sleep(1)
         else: self.fail("time out")
         ## 1. store custom fields names and types from settings
-        self.storeSettings()        
+        self.storeSettings()
         ## 2. navigate to Leads module and check custom fields avaliable on New form
         driver.find_element_by_id("nav-leads").click()
         time.sleep(2)
@@ -87,7 +89,7 @@ class GetBaseTask(unittest.TestCase):
         
     #
     # TODO: store more attributes co check the Custom Fields types available on the New/Edit forms for Leads, Contacts and Deals are correct
-    #       for Contacts additionaly check if field is displayed correctly for Person and/or Company
+    # for Contacts additionaly check if field is displayed correctly for Person and/or Company
     #
     def storeCustomFieldsProperties(self, customFieldsList):
         self.storedPropertiesList = list() # every field has 3 attributes: name, tag name and text arrtibute value (if present)
