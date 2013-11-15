@@ -102,7 +102,7 @@ class GetBaseTask(unittest.TestCase):
     
     def getCustomFieldNameFromNameAttribute(self, item):
         attrValue = item.get_attribute("name")
-        return re.search(r'custom_fields\[(.*)\]', attrValue).group(1).strip()
+        return re.search(r'^custom_fields\[(.*)\]$', attrValue).group(1).strip()
 
     def printCustomFields(self, customFieldsList, categoryName):
         print 'List of fields and their types in %s category' %categoryName
