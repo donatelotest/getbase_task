@@ -4,11 +4,35 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import unittest, time, re
 
-class GetBaseTask(unittest.TestCase):
+class ParametrizedTestCase(unittest.TestCase):
+
+    """ TestCase classes that want to be parametrized should
+       inherit from this class.
+    """
+    def __init__(self, methodName='runTest', usernameParam=None, passwordParam=None):
+        super(ParametrizedTestCase, self).__init__(methodName)
+        self.username = usernameParam
+        self.password = passwordParam
+
+ 
+    @staticmethod
+    def parametrize(testcase_class, usernameParam=None, passwordParam=None):
+        """ Create a suite containing all tests taken from the given
+            subclass, passing them the parameter 'param'.
+        """
+        testloader = unittest.TestLoader()
+        testnames = testloader.getTestCaseNames(testcase_class)
+        suite = unittest.TestSuite()
+        for name in testnames:
+            suite.addTest(testcase_class(name, usernameParam=usernameParam, passwordParam=passwordParam))
+        return suite
+
+
+class GetBaseTask(ParametrizedTestCase):
     
     def setUp(self):
-        self.username = "donatelo@interia.pl" # TODO: give username and password as parameters
-        self.password = "donatelo1"
+        #self.username = "donatelo@interia.pl" # TODO: give username and password as parameters
+        #self.password = "donatelo1"
         self.driver = webdriver.Firefox()
         #self.driver.implicitly_wait(30)
         self.wait = WebDriverWait(self.driver, 10) 
@@ -27,8 +51,9 @@ class GetBaseTask(unittest.TestCase):
         ## 2. navigate to Leads module and check custom fields avaliable on New form
         #self.wait.until(lambda d: d.find_element_by_id("nav-leads").is_displayed())
         driver.find_element_by_id("nav-leads").click()
-        time.sleep(2)#self.wait.until(lambda d: d.find_element_by_link_text("Lead").is_displayed())
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         driver.find_element_by_link_text("Lead").click()
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         allCustomFields = driver.find_elements_by_xpath("//*[contains(@name,'custom_fields')]")
         allCustomFieldsNamesList = list()
         for item in allCustomFields:
@@ -36,8 +61,9 @@ class GetBaseTask(unittest.TestCase):
         self.validateCustomFields(self.customFieldsLeadsList, allCustomFieldsNamesList)
         ## 3. navigate to Contacts module and check custom fields avaliable on New form
         driver.find_element_by_id("nav-contacts").click()
-        self.wait.until(lambda d: d.find_element_by_link_text("Person").is_displayed())
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         driver.find_element_by_link_text("Person").click()
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         allCustomFields = driver.find_elements_by_xpath("//*[contains(@name,'custom_fields')]")
         allCustomFieldsNamesList = list()
         for item in allCustomFields:
@@ -55,24 +81,24 @@ class GetBaseTask(unittest.TestCase):
 
     def storeSettings(self):
         # navigate to settings
-        self.wait.until(lambda d: d.find_element_by_css_selector("i.icon-angle-down").is_displayed())
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         self.driver.find_element_by_css_selector("i.icon-angle-down").click()
-        self.wait.until(lambda d: d.find_element_by_css_selector("a > strong").is_displayed())
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         self.driver.find_element_by_css_selector("a > strong").click()
-        self.wait.until(lambda d: d.find_element_by_css_selector("ul.nav.nav-list > li.leads > a").is_displayed())
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         self.driver.find_element_by_css_selector("ul.nav.nav-list > li.leads > a").click()
         self.customFieldsLeadsList = self.getCustomFielsNamesAndTypesFromSettings()
-        self.printCustomFields(self.customFieldsLeadsList, 'Leads')
-        self.wait.until(lambda d: d.find_element_by_css_selector("ul.nav.nav-list > li.contacts > a").is_displayed())
+        #self.printCustomFields(self.customFieldsLeadsList, 'Leads')
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         self.driver.find_element_by_css_selector("ul.nav.nav-list > li.contacts > a").click()
         self.customFieldsContactsList = self.getCustomFielsNamesAndTypesFromSettings()
-        self.printCustomFields(self.customFieldsContactsList, 'Contacts')
-        self.wait.until(lambda d: d.find_element_by_css_selector("ul.nav.nav-list > li.deals > a").is_displayed())
+        #self.printCustomFields(self.customFieldsContactsList, 'Contacts')
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         self.driver.find_element_by_css_selector("ul.nav.nav-list > li.deals > a").click()
-        self.wait.until(lambda d: d.find_element_by_link_text("Custom Fields").is_displayed())
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         self.driver.find_element_by_link_text("Custom Fields").click()
         self.customFieldsDealsList = self.getCustomFielsNamesAndTypesFromSettings()
-        self.printCustomFields(self.customFieldsDealsList, 'Deals')
+        #self.printCustomFields(self.customFieldsDealsList, 'Deals')
     
     def validateCustomFields(self, customFieldsListFromSettings, customFieldsListNewForm):
         # 1. check if number of displayed custom fields is equal to number of defined cistom fields
@@ -105,6 +131,7 @@ class GetBaseTask(unittest.TestCase):
             print fieldName,'\t - \t', fieldType
             
     def getCustomFielsNamesAndTypesFromSettings(self):
+        self.wait.until(lambda d: d.execute_script("return jQuery.active == 0"))
         regex = r'^(.*)\((.*)\)$'
         driver = self.driver
         fieldsList = driver.find_elements_by_xpath("//div[@id='custom-fields']/div[@class='named-objects-list ui-sortable']/.//label[@class='control-label']/h4")
@@ -124,5 +151,16 @@ class GetBaseTask(unittest.TestCase):
         self.driver.quit()
         #self.assertEqual([], self.verificationErrors)
 
+
+'''
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main()'''
+
+# input parameters - username and password
+username = 'donatelo@interia.pl'
+password = 'donatelo1'
+###
+suite = unittest.TestSuite()
+for i in range (0,20):
+    suite.addTest(ParametrizedTestCase.parametrize(GetBaseTask, username, password))
+unittest.TextTestRunner(verbosity=2).run(suite)
